@@ -1,0 +1,12 @@
+import express from "express";
+import {
+    sendVerificationEmail,
+    sendPasswordResetEmail,
+} from "../controllers/email.controllers";
+
+const router = express.Router();
+
+router.post("/send-verification-email", sendVerificationEmail);
+router.post("/send-password-reset-email", sendPasswordResetEmail);
+
+export default router;

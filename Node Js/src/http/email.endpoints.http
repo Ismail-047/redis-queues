@@ -1,0 +1,13 @@
+POST http://localhost:3000/api/email/send-verification-email
+Content-Type: application/json
+{
+    "to": "m.ismailusman47@gmail.com",
+    "code": "123456"
+}
+
+POST http://localhost:3000/api/email/send-password-reset-email
+Content-Type: application/json
+{
+    "to": "m.ismailusman47@gmail.com",
+    "token": "fdsfvads5464dsaf5v4dsvs5dv465dvas645dvadsv41v8ds4va1cd1vas"
+}
