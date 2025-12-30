@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { EmailService } from "../utlis/email-queue/email.service.js";
+import { EmailService } from "../utils/email-queue/email.service.js";
 
 export const sendVerificationEmail = async (req: Request, res: Response) => {
     try {

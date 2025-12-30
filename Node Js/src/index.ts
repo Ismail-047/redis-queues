@@ -3,7 +3,7 @@ import express, { Request, Response } from "express";
 
 // REDIS
 import "./lib/redis.js"; // INITIALIZE REDIS CONNECTION
-import "./utlis/email-queue/email.worker.js"; // IMPORT EMAIL WORKER TO START PROCESSING JOBS
+import "./utils/email-queue/email.worker.js"; // IMPORT EMAIL WORKER TO START PROCESSING JOBS
 
 
 const app = express();
