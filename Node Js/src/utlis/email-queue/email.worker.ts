@@ -1,11 +1,18 @@
 import { Worker, Job } from "bullmq";
 import { Resend } from "resend";
-import { redisConnection } from "../../lib/redis.js";
+import { redisClient } from "../../lib/redis.js";
 import type { EmailJob } from "./email.d";
 
-// Environment variables are loaded in index.ts before this module is imported
+/*
+    RESEND LIMITS:             FREE TIER                    PAID TIER (20$/month)
+    ---------------------------------------------------------------------------------------------------
+    API RATE LIMIT             2 REQUESTS PER SECOND        2 REQUESTS PER SECOND (DOESNT CHANGE)
+    RESENDDAILY LIMIT          100 EMAILS/DAY               NO DAILY CAP
+    RESENDMONTHLY LIMIT        3,000 EMAILS/MONTH           50,000 EMAILS/MONTH
+    ---------------------------------------------------------------------------------------------------
+*/
+
 if (!process.env.RESEND_API_KEY) {
-    console.error("ERROR: RESEND_API_KEY is not set. Please check your .env file.");
     throw new Error("RESEND_API_KEY environment variable is required");
 }
 
@@ -13,12 +20,16 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 const emailWorker = new Worker<EmailJob>("email", // QUEUE NAME
 
+    /*
+    BULLMQ CALLS THE BELOW METHOD AUTOMATICALLY WHEN A JOB APPEARS IN THE QUEUE.
+    - RETURNS NORMALLY -> JOB COMPLETE, REMOVED FROM QUEUE.
+    - THROWS ERROR -> JOB FAILED, RETRY LOGIC KICKS IN (3 ATTEMPTS WITH EXPONENTIAL BACKOFF, AS CONFIGURED IN THE SERVICE).
+*/
     async (job: Job<EmailJob>) => {
-        console.log("Job started");
         const { to, subject, html } = job.data;
 
         const { error } = await resend.emails.send({
-            from: "Ismail Usman <onboarding@resend.dev>",
+            from: `Auth App <auth@${process.env.RESEND_EMAIL_DOMAIN}>`,
             to,
             subject,
             html,
@@ -28,20 +39,18 @@ const emailWorker = new Worker<EmailJob>("email", // QUEUE NAME
             console.error(`Failed to send email: ${error.message}`);
             throw new Error(error.message); // TRIGGERS RETRY
         }
-    }, {
-    connection: redisConnection,
-    concurrency: 5,
-    limiter: {
-        max: 10,
-        duration: 1000,
+        console.log(`Email sent successfully to ${to}`);
     },
-});
-
-// EVENT LISTENERS
-// WHEN JOB IS COMPLETED
-emailWorker.on("completed", (job) => {
-    console.log(`Job ${job.id} completed`);
-});
+    {
+        connection: redisClient,
+        concurrency: 2, // MAX 2 EMAIL JOBS CAN BE PROCESSED CONCURRENTLY (RESEND LIMIT)
+        limiter: {
+            max: 2, // MAX 2 PER SECOND
+            duration: 1000, // 1 SECOND
+        },
+        lockDuration: 30000, // 30 SECONDS
+    }
+);
 
 // WHEN JOB IS FAILED
 emailWorker.on("failed", (job, error) => {

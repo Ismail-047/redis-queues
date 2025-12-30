@@ -1,6 +1,11 @@
 import "dotenv/config";
 import express, { Request, Response } from "express";
 
+// REDIS
+import "./lib/redis.js"; // INITIALIZE REDIS CONNECTION
+import "./utlis/email-queue/email.worker.js"; // IMPORT EMAIL WORKER TO START PROCESSING JOBS
+
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -17,9 +22,7 @@ app.get("/", (req: Request, res: Response) => {
 import EmailRoutes from "./routers/email.routes.js";
 app.use("/api/email", EmailRoutes);
 
-// IMPORT EMAIL WORKER TO START PROCESSING JOBS
-import "./utlis/email-queue/email.worker.js";
 
 app.listen(PORT, () => {
-    console.log(`Server running on port http://localhost:${PORT}`);
+    console.log(`SERVER RUNNING ON PORT http://localhost:${PORT}`);
 });

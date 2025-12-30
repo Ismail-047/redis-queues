@@ -1,10 +1,10 @@
 import type { Request, Response } from "express";
-import { MailService } from "../utlis/email-queue/mail.service.js";
+import { EmailService } from "../utlis/email-queue/email.service.js";
 
 export const sendVerificationEmail = async (req: Request, res: Response) => {
     try {
         const { to, code } = req.body;
-        await MailService.sendVerificationEmail(to, code);
+        await EmailService.sendVerificationEmail(to, code);
         return res
             .status(200)
             .json({
@@ -23,7 +23,7 @@ export const sendVerificationEmail = async (req: Request, res: Response) => {
 export const sendPasswordResetEmail = async (req: Request, res: Response) => {
     try {
         const { to, token } = req.body;
-        await MailService.sendPasswordResetEmail(to, token);
+        await EmailService.sendPasswordResetEmail(to, token);
         return res
             .status(200)
             .json({
